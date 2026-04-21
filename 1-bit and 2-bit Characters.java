@@ -7,6 +7,9 @@ class Solution {
                 i += 2;
             } else {
                 i += 1;
+
+
+                
             }
         } 
         return i == bits.length - 1;    
