@@ -1,0 +1,73 @@
+class Solution {
+    public class BIT{
+        int[] tree;
+
+        public BIT(int t_sz){
+            tree = new int[t_sz + 2];
+        }
+
+        public void insert(int i, int v){
+            i++;
+            while (i < tree.length){
+                tree[i] = Math.max(tree[i], v);
+                i += (i & -i);
+            }
+        }
+
+        public int get_max(int i){
+            i++;
+            int max = 0;
+            while (i > 0){
+                max = Math.max(tree[i], max);
+                i -= (i & -i);
+            }
+
+            return max;
+        }
+    }
+
+    public List<Boolean> getResults(int[][] queries) {
+        int max_x = 0;
+        BIT t;
+        TreeSet<Integer> set;
+        set = new TreeSet<>();
+        set.add(0);
+        for (int[] q : queries){
+            max_x = Math.max(max_x, q[1]);
+            if (q[0] == 1) set.add(q[1]);
+        }
+        set.add(max_x);
+        t = new BIT(max_x);
+        
+        
+        int last = 0;
+        for (Integer x : set){
+            t.insert(x, x - last);
+            last = x;
+        }
+
+        List<Boolean> rev_outp = new ArrayList<>();
+
+        for (int i = queries.length - 1; i > -1; i--){
+            int[] q = queries[i];
+
+            if (q[0] == 1){
+                if (q[1] != max_x) set.remove(q[1]);
+                int floor = set.floor(q[1]);
+                int ceiling = set.ceiling(q[1]);
+                t.insert(ceiling, ceiling - floor);
+            }
+            else{
+                int floor = set.floor(q[1]);
+                int ceiling = q[1];
+                int max_b4 = t.get_max(floor);
+
+                if ((ceiling - floor) >= q[2] || max_b4 >= q[2]) rev_outp.add(true);
+                else                                           rev_outp.add(false);
+            }
+        }
+
+        Collections.reverse(rev_outp);
+        return rev_outp;
+    }
+}
