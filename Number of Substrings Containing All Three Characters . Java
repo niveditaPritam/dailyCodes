@@ -1,0 +1,27 @@
+class Solution {
+    public int numberOfSubstrings(String s) {
+        int n = s.length();
+        int count = 0;
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = i; j < n; j++) {
+                String sub = s.substring(i, j + 1);
+                if (isValid(sub)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    
+    private boolean isValid(String sub) {
+        boolean a = false, b = false, c = false;
+        for (char ch : sub.toCharArray()) {
+            if (ch == 'a') a = true;
+            if (ch == 'b') b = true;
+            if (ch == 'c') c = true;
+        }
+        return a && b && c;
+    }
+}
+        
