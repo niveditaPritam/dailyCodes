@@ -1,0 +1,43 @@
+class Solution {
+    public int largestInteger(int[] nums, int k) {
+        int n = nums.length;
+
+        Map<Integer, List<Integer>> map = new HashMap<>();
+
+        for (int i = 0; i < n; i++) {
+            map.computeIfAbsent(nums[i], x -> new ArrayList<>()).add(i);
+        }
+
+        int answer = -1;
+
+        for (int x : map.keySet()) {
+            List<Integer> pos = map.get(x);
+
+            int count = 0;
+
+            for (int j = 0; j < pos.size(); j++) {
+                int current = pos.get(j);
+
+                int prev = (j == 0) ? -1 : pos.get(j - 1);
+                int next = (j == pos.size() - 1) ? n : pos.get(j + 1);
+
+                int left = Math.max(0, Math.max(current - k + 1, prev + 1));
+                int right = Math.min(n - k, Math.min(current, next - k));
+
+                if (left <= right) {
+                    count += right - left + 1;
+                }
+
+                if (count > 1) {
+                    break;
+                }
+            }
+
+            if (count == 1) {
+                answer = Math.max(answer, x);
+            }
+        }
+
+        return answer;
+    }
+}
