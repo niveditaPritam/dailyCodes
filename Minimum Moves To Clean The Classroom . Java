@@ -1,0 +1,123 @@
+class Solution {
+    public int minMoves(String[] classroom, int energy) {
+        
+        int m = classroom.length;
+        int n = classroom[0].length();
+
+        int[][] litter = new int[m][n];
+
+        int startX = 0;
+        int startY = 0;
+        int count = 0;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+
+                char ch = classroom[i].charAt(j);
+
+                if (ch == 'S') {
+                    startX = i;
+                    startY = j;
+                } 
+                else if (ch == 'L') {
+                    litter[i][j] = count;
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0) {
+            return 0;
+        }
+
+        /*
+         * mask:
+         * 1 means litter is still not collected
+         * 0 means litter is collected
+         */
+        int totalMasks = 1 << count;
+
+        boolean[][][][] visited =
+            new boolean[m][n][energy + 1][totalMasks];
+
+        Queue<int[]> queue = new LinkedList<>();
+
+        int fullMask = totalMasks - 1;
+
+        queue.offer(new int[] {
+            startX, startY, energy, fullMask
+        });
+
+        visited[startX][startY][energy][fullMask] = true;
+
+        int[] dx = {-1, 1, 0, 0};
+        int[] dy = {0, 0, -1, 1};
+
+        int moves = 0;
+
+        while (!queue.isEmpty()) {
+
+            int size = queue.size();
+
+            while (size-- > 0) {
+
+                int[] state = queue.poll();
+
+                int x = state[0];
+                int y = state[1];
+                int currentEnergy = state[2];
+                int mask = state[3];
+
+                if (mask == 0) {
+                    return moves;
+                }
+
+                if (currentEnergy == 0) {
+                    continue;
+                }
+
+                for (int d = 0; d < 4; d++) {
+
+                    int nx = x + dx[d];
+                    int ny = y + dy[d];
+
+                    if (nx < 0 || nx >= m || ny < 0 || ny >= n) {
+                        continue;
+                    }
+
+                    if (classroom[nx].charAt(ny) == 'X') {
+                        continue;
+                    }
+
+                    char ch = classroom[nx].charAt(ny);
+
+                    int nextEnergy = currentEnergy - 1;
+
+                    if (ch == 'R') {
+                        nextEnergy = energy;
+                    }
+
+                    int nextMask = mask;
+
+                    if (ch == 'L') {
+                        int index = litter[nx][ny];
+                        nextMask = mask & ~(1 << index);
+                    }
+
+                    if (!visited[nx][ny][nextEnergy][nextMask]) {
+
+                        visited[nx][ny][nextEnergy][nextMask] = true;
+
+                        queue.offer(new int[] {
+                            nx, ny, nextEnergy, nextMask
+                        });
+                    }
+                }
+            }
+
+            moves++;
+        }
+
+        return -1;
+    }
+}
