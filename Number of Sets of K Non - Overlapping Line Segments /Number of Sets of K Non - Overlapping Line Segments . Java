@@ -1,0 +1,59 @@
+class Solution {
+    public int numberOfSets(int n, int k) {
+        int MOD = 1000000007;
+
+        long[][] dp = new long[n][k + 1];
+
+        for (int i = 0; i < n; i++) {
+            dp[i][0] = 1;
+        }
+
+        for (int i = 1; i < n; i++) {
+            for (int j = 1; j <= k; j++) {
+
+                dp[i][j] = dp[i - 1][j];
+
+                if (i >= 1) {
+                    dp[i][j] += dp[i - 1][j - 1];
+                    dp[i][j] %= MOD;
+                }
+            }
+        }
+
+        return (int) combination(n + k - 1, 2 * k, MOD);
+    }
+
+    private long combination(int n, int r, int MOD) {
+        if (r > n - r) {
+            r = n - r;
+        }
+
+        long result = 1;
+
+        for (int i = 1; i <= r; i++) {
+            result = result * (n - r + i) % MOD;
+            result = result * modInverse(i, MOD) % MOD;
+        }
+
+        return result;
+    }
+
+    private long modInverse(long a, int MOD) {
+        return power(a, MOD - 2, MOD);
+    }
+
+    private long power(long a, long b, int MOD) {
+        long result = 1;
+
+        while (b > 0) {
+            if ((b & 1) == 1) {
+                result = result * a % MOD;
+            }
+
+            a = a * a % MOD;
+            b /= 2;
+        }
+
+        return result;
+    }
+}
