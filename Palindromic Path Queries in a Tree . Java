@@ -1,0 +1,166 @@
+class Solution {
+    int n;
+    List<Integer>[] adj;
+    int[] tin, tout, depth, parent;
+    int timer = 0;
+    int[] seg;
+
+    public List<Boolean> palindromePath(int n, int[][] edges, String s,
+                                        String[] queries) {
+        this.n = n;
+
+        adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) {
+            adj[i] = new ArrayList<>();
+        }
+
+        for (int[] e : edges) {
+            adj[e[0]].add(e[1]);
+            adj[e[1]].add(e[0]);
+        }
+
+        tin = new int[n];
+        tout = new int[n];
+        depth = new int[n];
+        parent = new int[n];
+
+        int[] nodeAt = new int[n];
+        timer = 0;
+
+        dfs(0, -1, 0, nodeAt);
+
+        seg = new int[4 * n];
+        build(1, 0, n - 1, nodeAt, s);
+
+        List<Boolean> ans = new ArrayList<>();
+
+        for (String q : queries) {
+            String[] parts = q.split(" ");
+
+            if (parts[0].equals("update")) {
+                int u = Integer.parseInt(parts[1]);
+                char c = parts[2].charAt(0);
+
+                update(1, 0, n - 1, tin[u], 1 << (c - 'a'));
+            } else {
+                int u = Integer.parseInt(parts[1]);
+                int v = Integer.parseInt(parts[2]);
+
+                int mask = query(1, 0, n - 1,
+                                 tin[u], tin[u])
+                         ^ query(1, 0, n - 1,
+                                 tin[v], tin[v]);
+
+                int lca = getLCA(u, v);
+
+                mask ^= query(1, 0, n - 1,
+                              tin[lca], tin[lca]);
+
+                // Path palindrome check requires character
+                // frequencies on the actual u-v path.
+                int pathMask = pathQuery(u, v);
+                ans.add(Integer.bitCount(pathMask) <= 1);
+            }
+        }
+
+        return ans;
+    }
+
+    void dfs(int u, int p, int d, int[] nodeAt) {
+        parent[u] = p;
+        depth[u] = d;
+        tin[u] = timer;
+        nodeAt[timer++] = u;
+
+        for (int v : adj[u]) {
+            if (v != p) {
+                dfs(v, u, d + 1, nodeAt);
+            }
+        }
+
+        tout[u] = timer - 1;
+    }
+
+    void build(int idx, int l, int r, int[] nodeAt, String s) {
+        if (l == r) {
+            seg[idx] = 1 << (s.charAt(nodeAt[l]) - 'a');
+            return;
+        }
+
+        int mid = (l + r) / 2;
+        build(idx * 2, l, mid, nodeAt, s);
+        build(idx * 2 + 1, mid + 1, r, nodeAt, s);
+        seg[idx] = seg[idx * 2] ^ seg[idx * 2 + 1];
+    }
+
+    void update(int idx, int l, int r, int pos, int value) {
+        if (l == r) {
+            seg[idx] = value;
+            return;
+        }
+
+        int mid = (l + r) / 2;
+        if (pos <= mid) {
+            update(idx * 2, l, mid, pos, value);
+        } else {
+            update(idx * 2 + 1, mid + 1, r, pos, value);
+        }
+
+        seg[idx] = seg[idx * 2] ^ seg[idx * 2 + 1];
+    }
+
+    int query(int idx, int l, int r, int ql, int qr) {
+        if (ql <= l && r <= qr) {
+            return seg[idx];
+        }
+
+        if (r < ql || l > qr) {
+            return 0;
+        }
+
+        int mid = (l + r) / 2;
+        return query(idx * 2, l, mid, ql, qr)
+             ^ query(idx * 2 + 1, mid + 1, r, ql, qr);
+    }
+
+    int getLCA(int u, int v) {
+        while (depth[u] > depth[v]) {
+            u = parent[u];
+        }
+
+        while (depth[v] > depth[u]) {
+            v = parent[v];
+        }
+
+        while (u != v) {
+            u = parent[u];
+            v = parent[v];
+        }
+
+        return u;
+    }
+
+    int pathQuery(int u, int v) {
+        int mask = 0;
+
+        while (depth[u] > depth[v]) {
+            mask ^= query(1, 0, n - 1, tin[u], tin[u]);
+            u = parent[u];
+        }
+
+        while (depth[v] > depth[u]) {
+            mask ^= query(1, 0, n - 1, tin[v], tin[v]);
+            v = parent[v];
+        }
+
+        while (u != v) {
+            mask ^= query(1, 0, n - 1, tin[u], tin[u]);
+            mask ^= query(1, 0, n - 1, tin[v], tin[v]);
+            u = parent[u];
+            v = parent[v];
+        }
+
+        mask ^= query(1, 0, n - 1, tin[u], tin[u]);
+        return mask;
+    }
+}
