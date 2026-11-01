@@ -1,0 +1,84 @@
+class Solution {
+    int MOD = 1000000007;
+    int m, n;
+    int[][] grid;
+    int[][][] memo;
+
+    public int uniquePaths(int[][] grid) {
+        this.grid = grid;
+        m = grid.length;
+        n = grid[0].length;
+
+        memo = new int[m][n][2];
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                memo[i][j][0] = -2;
+                memo[i][j][1] = -2;
+            }
+        }
+
+        long[][] dp = new long[m][n];
+        dp[0][0] = 1;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+
+                if (dp[i][j] == 0) {
+                    continue;
+                }
+
+                int right = solve(i, j, 0);
+
+                if (right != -1) {
+                    int r = right / n;
+                    int c = right % n;
+
+                    dp[r][c] = (dp[r][c] + dp[i][j]) % MOD;
+                }
+
+                // Move Down
+                int down = solve(i, j, 1);
+
+                if (down != -1) {
+                    int r = down / n;
+                    int c = down % n;
+
+                    dp[r][c] = (dp[r][c] + dp[i][j]) % MOD;
+                }
+            }
+        }
+
+        return (int) dp[m - 1][n - 1];
+    }
+
+    int solve(int r, int c, int dir) {
+
+        if (memo[r][c][dir] != -2) {
+            return memo[r][c][dir];
+        }
+
+        int nr = r;
+        int nc = c;
+
+        if (dir == 0) {
+            nc++;
+        } else {
+            nr++;
+        }
+
+        if (nr >= m || nc >= n) {
+            return memo[r][c][dir] = -1;
+        }
+
+        if (grid[nr][nc] == 0) {
+            return memo[r][c][dir] = nr * n + nc;
+        }
+
+        if (dir == 0) {
+            return memo[r][c][dir] = solve(nr, nc, 1);
+        } else {
+            return memo[r][c][dir] = solve(nr, nc, 0);
+        }
+    }
+}
